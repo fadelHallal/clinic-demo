@@ -361,7 +361,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-off
 }
 /* demo language switch in the header */
 .lang-sw{display:inline-flex;gap:2px;padding:2px;border-radius:999px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.55)}
-.lang-sw button{font:inherit;font-size:.78rem;font-weight:700;color:#fff;background:none;border:none;border-radius:999px;padding:5px 9px;cursor:pointer;line-height:1}
+.lang-sw button{font:inherit;font-size:.74rem;font-weight:700;color:#fff;background:none;border:none;border-radius:999px;padding:5px 7px;cursor:pointer;line-height:1}
 .lang-sw button.on{background:#fff;color:var(--accent)}
 .demo-reset{margin-top:6px}
 /* note bar: birthdays + app fee + gift ideas (on every page) */
@@ -551,9 +551,9 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-off
 #msgList .slot{gap:12px}
 #msgList .slot .p{min-width:0}
 /* ===== WhatsApp header button (demo) ===== */
-.btn.wa-top{background:#25d366;border-color:#25d366;color:#fff;gap:5px;padding:6px 11px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.btn.wa-top{background:#25d366;border-color:#25d366;color:#fff;gap:5px;padding:0;width:34px;height:34px;min-width:34px;border-radius:50%;justify-content:center;align-items:center;line-height:0;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.18)}
 .btn.wa-top:hover{background:#1ebe5b}
-.btn.wa-top svg{width:17px;height:17px;flex:none}
+.btn.wa-top svg{width:20px;height:20px;flex:none;display:block;margin:0}
 .tab-btn[data-view="messages"] svg{color:#25d366}
 .wa-badge{display:inline-flex;width:28px;height:28px;border-radius:50%;background:#25d366;color:#fff;align-items:center;justify-content:center}
 .wa-badge svg{width:17px;height:17px}
@@ -748,7 +748,7 @@ body[data-view="finance"] .fab{display:none}
     </div>
     <div class="top-actions">
       <button id="themeBtn" type="button" class="btn secondary sm icon-only"></button>
-      <button id="msgBtn" type="button" class="btn sm top-msg wa-top" aria-label="WhatsApp messages" title="WhatsApp messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3.5 20.5l1.4-4.2A8.3 8.3 0 1 1 8 19.3z"/><path d="M9.2 8.4c.1 3.3 2.9 6.2 6.3 6.4l1-1.5-2.1-1-1 .8a4.6 4.6 0 0 1-2.4-2.4l.8-1-1-2.1z" fill="currentColor" stroke="none"/></svg><span>WhatsApp</span></button>
+      <button id="msgBtn" type="button" class="btn sm top-msg wa-top" aria-label="WhatsApp messages" title="WhatsApp messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3.5 20.5l1.4-4.2A8.3 8.3 0 1 1 8 19.3z"/><path d="M9.2 8.4c.1 3.3 2.9 6.2 6.3 6.4l1-1.5-2.1-1-1 .8a4.6 4.6 0 0 1-2.4-2.4l.8-1-1-2.1z" fill="currentColor" stroke="none"/></svg></button>
       <button id="logoutBtn" class="btn secondary sm">Sign out</button>
     </div>
   </header>
@@ -1099,14 +1099,6 @@ const I18N_DICT = {
   "One less": ["Un de moins", "واحد أقل"],
   "One more": ["Un de plus", "واحد أكثر"],
   "Period": ["Période", "الفترة"],
-  "Saida Center": ["Centre de Saïda", "مركز صيدا"],
-  "Tyre Center": ["Centre de Tyr", "مركز صور"],
-  "Nabatieh Center": ["Centre de Nabatieh", "مركز النبطية"],
-  "Jezzine Center": ["Centre de Jezzine", "مركز جزين"],
-  "Beirut Clinic": ["Clinique de Beyrouth", "عيادة بيروت"],
-  "Zahrani Clinic": ["Clinique de Zahrani", "عيادة الزهراني"],
-  "Marjayoun Clinic": ["Clinique de Marjayoun", "عيادة مرجعيون"],
-  "Heart Tests Lab": ["Laboratoire d'explorations cardiaques", "مختبر فحوصات القلب"],
   "Please choose the date and the clinic.": ["Veuillez choisir la date et la clinique.", "الرجاء اختيار التاريخ والعيادة."],
   "Please choose the test (Echo, Holter, Stress test or ECG).": ["Veuillez choisir l'examen (écho, Holter, test d'effort ou ECG).", "الرجاء اختيار الفحص (إيكو، هولتر، اختبار الجهد أو تخطيط القلب)."],
   "Please enter the number of patients.": ["Veuillez saisir le nombre de patients.", "الرجاء إدخال عدد المرضى."],
@@ -1189,7 +1181,7 @@ const I18N_PATTERNS = [
   [/^(\d+) done$/, m => `${m[1]} terminé${__plS(m[1])}`, m => `انتهى ${m[1]}`],
   [/^\+(\d+) more$/, m => `+${m[1]} autres`, m => `+${m[1]} أخرى`],
   [/^(.+) collected$/, m => `${m[1]} encaissés`, m => `تم تحصيل ${m[1]}`],
-  [/^(.+) (\$[\d.,]+)$/, (m,t) => `${t(m[1])} ${m[2]}`, (m,t) => `${t(m[1])} ${m[2]}`],
+  [/^(.+[^·]) (\$[\d.,]+)$/, (m,t) => `${t(m[1])} ${m[2]}`, (m,t) => `${t(m[1])} ${m[2]}`],
   [/^Paid (.+)$/, m => `Payé ${m[1]}`, m => `مدفوع ${m[1]}`],
   [/^tap to see$/, "touchez pour voir", "اضغط للعرض"],
   [/^tap for details$/, "touchez pour le détail", "اضغط للتفاصيل"],
@@ -1303,7 +1295,7 @@ const I18N_PATTERNS = [
 // (localStorage). Nothing is sent anywhere; each visitor has their own copy. "Reset demo" starts over.
 (function(){
   // one set of fake data per language (the cardiology demo can switch French / Arabic / English)
-  const KEY = "clinic_demo_db_v3" + (window.__LANG && window.__LANG !== "en" ? "_" + window.__LANG : "");
+  const KEY = "clinic_demo_db_v4" + (window.__LANG && window.__LANG !== "en" ? "_" + window.__LANG : "");
   let S = null;
 
   // fake login so the demo opens straight away (any email/password works after Sign out)
@@ -3318,12 +3310,12 @@ function openHospModal(entry){
 ICON.clinic = svgIcon('<path d="M3 21h18M5 21V8l7-5 7 5v13"/><path d="M12 9v6M9 12h6"/>');
 // $ per patient. Each saved line keeps its own rate, so changing a rate here never changes past lines.
 const CLINIC_GROUPS = [
-  {key:"hayaa", name:"Network", clinics:[["Saida Center",8],["Tyre Center",8],["Nabatieh Center",8],["Jezzine Center",8]]},
-  {key:"other", name:"Other clinics", clinics:[["Beirut Clinic",15],["Zahrani Clinic",10],["Marjayoun Clinic",10],["Heart Tests Lab",null]]},
+  {key:"hayaa", name:"Network", clinics:[["مركز صيدا",8],["مركز صور",8],["مركز النبطية",8],["مركز جزين",8]]},
+  {key:"other", name:"Other clinics", clinics:[["عيادة بيروت",15],["عيادة الزهراني",10],["عيادة مرجعيون",10],["مركز فحوصات القلب",null]]},
 ];
 const CLINIC_RATE = Object.fromEntries(CLINIC_GROUPS.flatMap(g=>g.clinics).filter(c=>c[1]!==null));
 // Laser clinics are paid per act, not per patient: one line = one act (counted as 1 patient in the totals).
-const LASER_CLINICS = ["Heart Tests Lab"];
+const LASER_CLINICS = ["مركز فحوصات القلب"];
 const LASER_ACTS = [["Echo",50],["Holter",60],["Stress test",80],["ECG",15]];
 const isLaser = n=>LASER_CLINICS.includes(n);
 // Old names of renamed clinics: lines saved under them show (and count) under the new name.
@@ -3476,7 +3468,7 @@ function openClinicModal(entry){
 const FIN_FIXED = [{fixed:"utilities", name:"Utilities", amount:500}, {fixed:"home", name:"Home", amount:300}, {fixed:"rent", name:"Clinic rent", amount:400}];
 const FIN_GROUP = {};   // shown together on one line
 // Order of the other clinics in Money in (like his sheet). Ri3aye (typed by him) comes right after Hayaa.
-const FIN_CLINICS = ["Beirut Clinic","Zahrani Clinic","Marjayoun Clinic","Heart Tests Lab"];
+const FIN_CLINICS = ["عيادة بيروت","عيادة الزهراني","عيادة مرجعيون","مركز فحوصات القلب"];
 const FIN_RI3AYE = {fixed:"ri3aye", name:"Ri3aye"};
 let finMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 let finRecs = [], finReady = null, fin = null, finTimer = null;
