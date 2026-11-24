@@ -359,10 +359,11 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-off
 @media(min-width:761px){
   .tab-btn.active{background:var(--accent);border-color:var(--accent);color:var(--on-accent);box-shadow:0 3px 10px color-mix(in srgb,var(--accent) 30%,transparent)}
 }
-/* demo language switch */
-.note-bar .nb-lang{display:inline-flex;gap:4px}
-.note-bar .nb-lang button{font:inherit;font-size:.82em;color:#fff;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.45);border-radius:999px;padding:2px 10px;cursor:pointer}
-.note-bar .nb-lang button.on{background:#fff;color:#c2185b;font-weight:700}
+/* demo language switch in the header */
+.lang-sw{display:inline-flex;gap:2px;padding:2px;border-radius:999px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.55)}
+.lang-sw button{font:inherit;font-size:.78rem;font-weight:700;color:#fff;background:none;border:none;border-radius:999px;padding:5px 9px;cursor:pointer;line-height:1}
+.lang-sw button.on{background:#fff;color:var(--accent)}
+.demo-reset{margin-top:6px}
 /* note bar: birthdays + app fee + gift ideas (on every page) */
 .note-bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;padding:10px 16px;margin-bottom:10px;border-radius:14px;color:#fff;font-size:.9rem;line-height:1.35;background:linear-gradient(110deg,#ff7a18,#ff3d77 55%,#b33dff);box-shadow:0 6px 18px rgba(255,61,119,.3)}
 .note-bar[hidden]{display:none}
@@ -555,6 +556,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-off
 /* ===== right-to-left (Arabic) ===== */
 [dir=rtl] .close{right:auto;left:14px}
 [dir=rtl] .side-search kbd{right:auto;left:8px}
+[dir=rtl] .top h1{unicode-bidi:plaintext}
 /* ===== vitals (cardiology demo) ===== */
 .vitals{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;max-width:460px}
 .vitals label,.vitals-ecg label{display:flex;flex-direction:column;gap:3px;margin:0}
@@ -844,6 +846,7 @@ const I18N_DICT = {
   // demo bar, login
   "Demo version": ["Version démo", "نسخة تجريبية"],
   "with fake patients and numbers. Try everything: what you add stays only on this device.": ["avec des patients et des chiffres fictifs. Essayez tout : ce que vous ajoutez reste uniquement sur cet appareil.", "بمرضى وأرقام وهمية. جرّب كل شيء: ما تضيفه يبقى على هذا الجهاز فقط."],
+  "Language": ["Langue", "اللغة"],
   "↺ Reset demo": ["↺ Réinitialiser la démo", "↺ إعادة ضبط النسخة التجريبية"],
   "Email": ["E-mail", "البريد الإلكتروني"],
   "Password": ["Mot de passe", "كلمة المرور"],
@@ -1014,9 +1017,6 @@ const I18N_DICT = {
   "Saida": ["Saïda", "صيدا"], "Nabatieh": ["Nabatieh", "النبطية"], "Tyre": ["Tyr", "صور"], "Jezzine": ["Jezzine", "جزين"],
   "Beirut": ["Beyrouth", "بيروت"], "Ghazieh": ["Ghazieh", "الغازية"], "Marjayoun": ["Marjayoun", "مرجعيون"],
   "Penicillin": ["Pénicilline", "البنسلين"], "Sulfa": ["Sulfamides", "السلفا"], "Latex": ["Latex", "اللاتكس"],
-  "Cedars Hospital": ["Hôpital des Cèdres", "مستشفى الأرز"],
-  "Al-Amal Hospital": ["Hôpital Al-Amal", "مستشفى الأمل"],
-  "Coast Medical Center": ["Centre médical de la Côte", "مركز الساحل الطبي"],
 
   // hospital
   "New hospital act": ["Nouvel acte hospitalier", "عمل جديد في المستشفى"],
@@ -1184,12 +1184,15 @@ const I18N_PATTERNS = [
   if(L==="ar") document.documentElement.dir = "rtl";
   window.__setLang = l => { try{ localStorage.setItem("demo_lang", l); }catch(e){} location.reload(); };
   window.__t = s => s;
-  if(L==="en") return;
 
-  const col = L==="fr" ? 0 : 1;
+  const col = L==="fr" ? 0 : L==="ar" ? 1 : -1;      // English: nothing to translate (only the direction fix below)
   const D = new Map();
-  Object.entries(I18N_DICT).forEach(([k,v]) => { if(v && v[col]) D.set(k, v[col]); });
-  const P = I18N_PATTERNS.map(p => [p[0], p[col+1]]).filter(p => p[1] !== undefined);
+  if(col >= 0) Object.entries(I18N_DICT).forEach(([k,v]) => { if(v && v[col]) D.set(k, v[col]); });
+  const P = col < 0 ? [] : I18N_PATTERNS.map(p => [p[0], p[col+1]]).filter(p => p[1] !== undefined);
+  // Lines mixing Arabic and Latin parts ("Name · مستشفى …"): keep each part in its own direction
+  const AR_RE = /[\u0600-\u06FF]/, LAT_RE = /[A-Za-z]/;
+  const isolate = t => (t.includes(" · ") && AR_RE.test(t) && LAT_RE.test(t) && !t.includes("\u2068"))
+    ? t.split(" · ").map(x => x.trim() ? "\u2068" + x + "\u2069" : x).join(" · ") : t;
 
   // exact text, then patterns (counts, dates…), then the parts around " · ", then the label before ": "
   function core(t, depth){
@@ -1221,7 +1224,7 @@ const I18N_PATTERNS = [
     if(node.nodeType === 3){
       const p = node.parentNode;
       if(p && p.nodeName === "OPTION" && !p.hasAttribute("value")) p.setAttribute("value", p.textContent); // keep what the code reads
-      const v = node.nodeValue, n = tr(v); if(n !== v) node.nodeValue = n;
+      const v = node.nodeValue, n = isolate(tr(v)); if(n !== v) node.nodeValue = n;
       return;
     }
     if(node.nodeType !== 1) return;
@@ -1260,7 +1263,7 @@ const I18N_PATTERNS = [
 // (localStorage). Nothing is sent anywhere; each visitor has their own copy. "Reset demo" starts over.
 (function(){
   // one set of fake data per language (the cardiology demo can switch French / Arabic / English)
-  const KEY = "clinic_demo_db_v2" + (window.__LANG && window.__LANG !== "en" ? "_" + window.__LANG : "");
+  const KEY = "clinic_demo_db_v3" + (window.__LANG && window.__LANG !== "en" ? "_" + window.__LANG : "");
   let S = null;
 
   // fake login so the demo opens straight away (any email/password works after Sign out)
@@ -1341,7 +1344,10 @@ const I18N_PATTERNS = [
       });
     }
 
-    const hospitals = CARDIO ? ["Cedars Hospital","Al-Amal Hospital","Coast Medical Center"] : ["SRH","Hammoud Hospital","Labib Medical Center"];
+    // real hospitals of South Lebanon, written in Arabic in every language (cardiology demo)
+    const hospitals = CARDIO ? ["مستشفى حمود الجامعي","مستشفى لبيب الطبي","مستشفى الراعي","مستشفى صيدا الحكومي",
+                                "مستشفى نبيه بري الحكومي الجامعي","مستشفى الشيخ راغب حرب الجامعي","مستشفى غندور",
+                                "مستشفى جبل عامل","مستشفى حيرام"] : ["SRH","Hammoud Hospital","Labib Medical Center"];
     const payers = (typeof PAYERS!=="undefined") ? PAYERS : ["خاص"];
     for(let d=-60; d<=0; d++){
       const day = addDays(d); if(day.getDay()===0 || rnd()<.55) continue;
@@ -1590,14 +1596,23 @@ async function getToken(){
 }
 let sessionChecked = false;
 
-// DEMO: bar at the top of every page
+// DEMO: language switch in the header, Reset demo next to the backup button (no ribbon)
 function renderNoteBar(){
-  const el = document.getElementById("noteBar"); if(!el) return;
-  el.innerHTML = '<span>🧪 <b>Demo version</b> with fake patients and numbers. Try everything: what you add stays only on this device.</span>'
-    + '<span class="nb-sep">·</span><span class="nb-gift" onclick="__demoReset()">↺ Reset demo</span>'
-    + '<span class="nb-sep">·</span><span class="nb-lang">' + [["fr","Français"],["ar","العربية"],["en","English"]].map(([c,n])=>
-        '<button type="button" class="'+(c===__LANG?'on':'')+'" onclick="__setLang(\''+c+'\')">'+n+'</button>').join("") + '</span>';
-  el.hidden = false;
+  const bar = document.getElementById("noteBar"); if(bar) bar.hidden = true;
+  const acts = document.querySelector(".top-actions");
+  if(acts && !document.getElementById("langSw")){
+    const lo = document.getElementById("logoutBtn"); if(lo) lo.style.display = "none";
+    const w = document.createElement("div");
+    w.id = "langSw"; w.className = "lang-sw"; w.setAttribute("role","group"); w.setAttribute("aria-label","Language");
+    w.innerHTML = [["fr","FR"],["ar","عربي"],["en","EN"]].map(([c,n])=>'<button type="button" class="'+(c===__LANG?'on':'')+'" data-lang="'+c+'">'+n+'</button>').join("");
+    w.onclick = e=>{ const b = e.target.closest("[data-lang]"); if(b && b.dataset.lang!==__LANG) __setLang(b.dataset.lang); };
+    acts.appendChild(w);
+  }
+  document.querySelectorAll("[data-backup]").forEach(b=>{
+    if(b.parentNode.querySelector(".demo-reset")) return;
+    const r = document.createElement("button"); r.type = "button"; r.className = "foot-btn demo-reset"; r.textContent = "↺ Reset demo";
+    r.onclick = ()=>__demoReset(); b.after(r);
+  });
 }
 async function init(){
   renderNoteBar();
@@ -3089,7 +3104,7 @@ const payerLabel = x=>x;
 // Only Cataract and Pterygium are operations; CS is counted on its own; every other act (FB, Suture, Examination, other acts) is an ER act.
 const OPERATIONS = ["Angiography","Angioplasty","Pacemaker"];
 const isOperation = name=>{ const n = String(name||"").trim(); return OPERATIONS.includes(HOSP_OLD[n.toLowerCase()] || n); };
-const DEFAULT_HOSPITAL = (window.__t || (x=>x))("Cedars Hospital");
+const DEFAULT_HOSPITAL = "مستشفى حمود الجامعي";
 const isCS = name=>String(name||"").trim().toUpperCase()==="CS";
 let procedures = [], procReady = null;
 let hospMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
