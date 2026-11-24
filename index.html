@@ -1119,6 +1119,8 @@ const I18N_DICT = {
   "lines without ✓ · not counted": ["lignes sans ✓ · non comptées", "بنود بلا ✓ · غير محتسبة"],
   "paid ✓ lines only": ["lignes payées ✓ uniquement", "البنود المدفوعة ✓ فقط"],
   "Utilities": ["Charges", "الفواتير"],
+  "Clinic utilities": ["Charges du cabinet", "فواتير العيادة"],
+  "Secretary salary": ["Salaire de la secrétaire", "راتب السكرتيرة"],
   "Home": ["Maison", "المنزل"],
   "Clinic rent": ["Loyer du cabinet", "إيجار العيادة"],
   "Total expenses": ["Total des dépenses", "مجموع المصاريف"],
@@ -1295,7 +1297,7 @@ const I18N_PATTERNS = [
 // (localStorage). Nothing is sent anywhere; each visitor has their own copy. "Reset demo" starts over.
 (function(){
   // one set of fake data per language (the cardiology demo can switch French / Arabic / English)
-  const KEY = "clinic_demo_db_v4" + (window.__LANG && window.__LANG !== "en" ? "_" + window.__LANG : "");
+  const KEY = "clinic_demo_db_v5" + (window.__LANG && window.__LANG !== "en" ? "_" + window.__LANG : "");
   let S = null;
 
   // fake login so the demo opens straight away (any email/password works after Sign out)
@@ -3465,7 +3467,7 @@ function openClinicModal(entry){
 // Money in = his account at the start of the month + what the app already knows (clinic, hospital, outside clinics) + lines he adds.
 // Money out = Utilities, Home, his own lines, and Clinic rent always last. Family expenses = lines he marks "Family".
 // Always paid, same amount every month unless he changes it (a new month copies last month's amount).
-const FIN_FIXED = [{fixed:"utilities", name:"Utilities", amount:500}, {fixed:"home", name:"Home", amount:300}, {fixed:"rent", name:"Clinic rent", amount:400}];
+const FIN_FIXED = [{fixed:"utilities", name:"Clinic utilities", amount:300}, {fixed:"home", name:"Secretary salary", amount:500}, {fixed:"rent", name:"Clinic rent", amount:600}];
 const FIN_GROUP = {};   // shown together on one line
 // Order of the other clinics in Money in (like his sheet). Ri3aye (typed by him) comes right after Hayaa.
 const FIN_CLINICS = ["عيادة بيروت","عيادة الزهراني","عيادة مرجعيون","مركز فحوصات القلب"];
@@ -3557,7 +3559,7 @@ function finShowTotals(){
 }
 // Donut of how a total splits (like his sheet). Max 5 colored slices + "Other"; the legend lists name, $ and %.
 // Known lines keep their color every month (color follows the line, not its rank).
-const FIN_SLOT = {out:{"Utilities":1, "Home":2, "Clinic rent":3}, in:{"Clinic":1, "Hospital":2, "Network":3}};
+const FIN_SLOT = {out:{"Clinic utilities":1, "Secretary salary":2, "Clinic rent":3}, in:{"Clinic":1, "Hospital":2, "Network":3}};
 function finDonut(kind, title, lines){
   lines = lines.filter(l=>l.amount>0).sort((a,b)=>b.amount-a.amount);
   if(lines.length<2) return "";
@@ -3642,14 +3644,14 @@ function renderFinance(){
     +'<div class="fin-card"><div class="fin-h out">Money out</div>'
     +fin.expenses.map((l,i)=>'<div class="fin-row own'+(l.fixed?' fixed':'')+'">'
       +(l.fixed ? '<span>'+escapeHtml(l.name)+'</span>' : '<input class="fin-name" type="text" autocomplete="off" placeholder="Name" data-ex-name="'+i+'" value="'+escapeHtml(l.name||"")+'">')
-      +'<button type="button" class="fin-fam'+(l.family?' on':'')+'" data-ex-fam="'+i+'" title="Expense on you / your family">Family</button>'
+      
       +finAmt(l.amount,'data-ex-amt="'+i+'"', prevAmt(fin.prev&&fin.prev.expenses, l))
       +(l.fixed ? '<i class="fin-x" aria-hidden="true"></i>' : '<button type="button" class="fin-x" data-ex-del="'+i+'" aria-label="Remove line">×</button>')+'</div>'
       ).join("")
     +'<button type="button" class="fin-add" data-add="ex">+ Add expense</button>'
     +'<div class="fin-row tot"><span>Total expenses</span><b id="finTotOut"></b></div></div>'
     +'<div class="fin-card"><div class="fin-h gain">Money left over</div><div class="fin-row tot"><span>Income minus expenses</span><b id="finLeft"></b></div>'
-    +'<div class="fin-row"><span>Family expenses <small>lines marked Family</small></span><b id="finFamily"></b></div></div>';
+    +'</div>';
   finShowTotals();
   el.oninput = e=>{
     const t = e.target, d = t.dataset;
