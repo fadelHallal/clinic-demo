@@ -547,6 +547,9 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-off
 :root[data-theme="dark"]{--free:#b69cff}
 .freeb{color:var(--free);font-weight:600}
 .stat .si.free{background:color-mix(in srgb,var(--free) 14%,var(--card));color:var(--free)}
+/* ===== right-to-left (Arabic) ===== */
+[dir=rtl] .close{right:auto;left:14px}
+[dir=rtl] .side-search kbd{right:auto;left:8px}
 /* ===== vitals (cardiology demo) ===== */
 .vitals{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;max-width:460px}
 .vitals label,.vitals-ecg label{display:flex;flex-direction:column;gap:3px;margin:0}
@@ -1035,7 +1038,8 @@ const I18N_DICT = {
   "angiography · angioplasty · pacemaker": ["coronarographie · angioplastie · pacemaker", "تصوير · توسيع · منظّم ضربات"],
   "echo · stress test · Holter · ECG": ["écho · test d'effort · Holter · ECG", "إيكو · جهد · هولتر · تخطيط"],
   "Please choose the date and the act.": ["Veuillez choisir la date et l'acte.", "الرجاء اختيار التاريخ والعمل."],
-  "Please enter the K (for example 50).": ["Veuillez saisir le K (par exemple 50).", "الرجاء إدخال K (مثلًا 50)."],
+  "Please enter the amount in $ (for example 300).": ["Veuillez saisir le montant en $ (par exemple 300).", "الرجاء إدخال المبلغ بالدولار (مثلًا 300)."],
+  "Amount ($)": ["Montant ($)", "المبلغ ($)"],
   "Delete this hospital act?\n\nThis cannot be undone.": ["Supprimer cet acte hospitalier ?\n\nCette action est irréversible.", "حذف هذا العمل؟\n\nلا يمكن التراجع عن ذلك."],
 
   // clinics
@@ -1247,7 +1251,7 @@ const I18N_PATTERNS = [
 // (localStorage). Nothing is sent anywhere; each visitor has their own copy. "Reset demo" starts over.
 (function(){
   // one set of fake data per language (the cardiology demo can switch French / Arabic / English)
-  const KEY = "clinic_demo_db_v1" + (window.__LANG && window.__LANG !== "en" ? "_" + window.__LANG : "");
+  const KEY = "clinic_demo_db_v2" + (window.__LANG && window.__LANG !== "en" ? "_" + window.__LANG : "");
   let S = null;
 
   // fake login so the demo opens straight away (any email/password works after Sign out)
@@ -1337,7 +1341,7 @@ const I18N_PATTERNS = [
         const proc = CARDIO ? pick(["Angiography","Angiography","Angioplasty","Pacemaker","Echo","Echo","Stress test","Holter","ECG","CS"])
                             : pick(["Cataract","Cataract","FB","Suture","Examination","Pterygium","CS"]);
         const K = {Cataract:60, FB:10, Suture:pick([20,35]), Examination:7, Pterygium:pick([30,35]), CS:0,
-                   Angiography:150, Angioplasty:pick([250,350]), Pacemaker:300, Echo:15, "Stress test":20, Holter:15, ECG:3}[proc];
+                   Angiography:300, Angioplasty:pick([500,700]), Pacemaker:600, Echo:40, "Stress test":50, Holter:40, ECG:10}[proc];
         t.procedures.push({id:id(), date:iso(day), procedure:proc, patient_name:pick([...names]), hospital:T(pick(hospitals)),
           amount:K, payer:pick(payers), notes:"", created_at:day.getTime()});
       }
@@ -3062,7 +3066,7 @@ ICON.hosp = svgIcon('<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M
 const HOSP_PRESETS = ["Angiography","Angioplasty","Pacemaker","Echo","Stress test","Holter","ECG","CS"];
 // Names used before the short ones: shown as the matching short name when editing.
 // Default K per act (first value is filled in; when there are two, he taps the one he wants). Always editable.
-const DEFAULT_K = {"Angiography":[150], "Angioplasty":[250,350], "Pacemaker":[300], "Echo":[15], "Stress test":[20], "Holter":[15], "ECG":[3]};
+const DEFAULT_K = {"Angiography":[300], "Angioplasty":[500,700], "Pacemaker":[600], "Echo":[40], "Stress test":[50], "Holter":[40], "ECG":[10]};
 const HOSP_OLD = {};
 // الجهة الضامنة: who pays for the act.
 const PAYERS = ["رعاية","وزارة","ضمان","جيش","تعاونية","قوى الأمن","خاص"];
@@ -3080,8 +3084,8 @@ async function loadProcedures(){
 }
 function hospIn(from, to){ return procedures.filter(x=>x.date>=from && x.date<=to); }
 function kSum(list){ return list.filter(x=>!isCS(x.procedure)).reduce((t,x)=>t+(x.amount||0),0); }
-const fmtK = n=>(Math.round(n*100)/100)+" K";
-const K_VALUE_USD = 5;   // 1 K = $5
+const fmtK = n=>"$"+(Math.round(n*100)/100).toLocaleString("en-US");
+const K_VALUE_USD = 1;   // 1 K = $5
 const fmtKUsd = n=>"$"+(Math.round(n*K_VALUE_USD*100)/100).toLocaleString("en-US");
 // "85 K · 2 CS" for a list of hospital entries ("" when empty).
 // "3 hospital acts" for a list of hospital entries (no K totals are shown anywhere).
@@ -3129,7 +3133,7 @@ function renderHospital(){
   // Total K of the month (all acts except CS) and its value in $ (1 K = $5).
   const totK = kSum(list);
   document.getElementById("hospTotal").innerHTML = totK
-    ? '<span class="lbl">Total '+name+'</span><span class="val" dir="ltr">'+fmtK(totK)+'<span class="usd">'+fmtKUsd(totK)+'</span></span>' : "";
+    ? '<span class="lbl">Total '+name+'</span><span class="val" dir="ltr">'+fmtK(totK)+'</span>' : "";
   const st = document.getElementById("hospStats");
   const card = (key,icon,tone,head,n,detail)=>n
     ? statCard("button",' type="button" data-hl="'+key+'" title="See them"',icon,tone,head,String(n),detail+" · tap to see")
@@ -3175,7 +3179,7 @@ function openHospModal(entry){
     +'<option value="other"'+(act==="other"?' selected':'')+'>Other act…</option></select>'
     +'<input id="hProc" list="hProcList" autocomplete="off" placeholder="Name of the act" style="margin-top:8px" value="'+(act==="other"?escapeHtml(v.procedure):"")+'">'
     +'<datalist id="hProcList">'+custom.map(n=>'<option value="'+escapeHtml(n)+'">').join("")+'</datalist></div>'
-    +'<div class="field" id="hKField"><label for="hAmount">K</label><input id="hAmount" type="text" inputmode="decimal" autocomplete="off" placeholder="K" value="'+(v.amount===""||isCS(v.procedure)?"":v.amount)+'"></div>'
+    +'<div class="field" id="hKField"><label for="hAmount">Amount ($)</label><input id="hAmount" type="text" inputmode="decimal" autocomplete="off" placeholder="$" value="'+(v.amount===""||isCS(v.procedure)?"":v.amount)+'"></div>'
     +'<div class="field"><label for="hPayer" dir="rtl" style="text-align:right">الجهة الضامنة</label><select id="hPayer" dir="rtl">'
     +'<option value="">—</option>'+PAYERS.map(n=>'<option value="'+n+'"'+(v.payer===n?' selected':'')+'>'+payerLabel(n)+'</option>').join("")+'</select></div>'
     +'<div class="field"><label for="hPatient">Patient (optional)</label><input id="hPatient" list="hPatList" autocomplete="off" value="'+escapeHtml(v.patientName||"")+'">'
@@ -3199,7 +3203,7 @@ function openHospModal(entry){
   const kOpts = document.createElement("div"); kOpts.className = "hp-chips"; kOpts.style.marginTop = "8px"; $h("hKField").appendChild(kOpts);
   const showKOpts = ()=>{
     const opts = DEFAULT_K[actSel.value] || [];
-    kOpts.innerHTML = opts.length>1 ? opts.map(k=>'<button type="button" class="pill'+(String(k)===kIn.value.trim()?' on':'')+'" data-k="'+k+'">'+k+' K</button>').join("") : "";
+    kOpts.innerHTML = opts.length>1 ? opts.map(k=>'<button type="button" class="pill'+(String(k)===kIn.value.trim()?' on':'')+'" data-k="'+k+'">$'+k+'</button>').join("") : "";
   };
   kOpts.onclick = e=>{ const b = e.target.closest("[data-k]"); if(!b) return; kIn.value = b.dataset.k; showKOpts(); };
   kIn.addEventListener("input", showKOpts);
@@ -3220,7 +3224,7 @@ function openHospModal(entry){
     const date = $h("hDate").value, procedure = actName();
     const amount = isCS(procedure) ? 0 : parseFloat(String($h("hAmount").value).replace(",", "."));
     if(!date || !procedure){ alert("Please choose the date and the act."); return; }
-    if(isNaN(amount) || amount<0){ alert("Please enter the K (for example 50)."); return; }
+    if(isNaN(amount) || amount<0){ alert("Please enter the amount in $ (for example 300)."); return; }
     const o = {date, procedure, patientName:$h("hPatient").value.trim(), hospital:$h("hHosp").value.trim(), payer:$h("hPayer").value, amount, notes:$h("hNotes").value.trim(),
       createdAt: isEdit ? (entry.createdAt||Date.now()) : Date.now()};
     saving = true; $h("saveH").disabled = true;
