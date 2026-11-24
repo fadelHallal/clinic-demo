@@ -874,7 +874,7 @@ const I18N_DICT = {
   "Patients": ["Patients", "المرضى"],
   "Hospital": ["Hôpital", "المستشفى"],
   "Clinics": ["Cliniques", "العيادات"],
-  "Finance": ["Finances", "المالية"],
+  "Finance": ["Finances", "الحسابات"],
   "Messages": ["Messages", "الرسائل"],
   "Search patients": ["Rechercher un patient", "البحث عن مريض"],
   "Search patients…": ["Rechercher un patient…", "ابحث عن مريض…"],
@@ -1038,7 +1038,7 @@ const I18N_DICT = {
   "Other act…": ["Autre acte…", "عمل آخر…"],
   "Choose…": ["Choisir…", "اختر…"],
   "Hospital name": ["Nom de l'hôpital", "اسم المستشفى"],
-  "Cath lab": ["Salle de cathétérisme", "مختبر القسطرة"],
+  "Cath lab": ["Salle de cathétérisme", "القسطرة"],
   "Tests": ["Examens", "الفحوصات"],
   "CS": ["CS", "استشارة"],
   "Angiography": ["Coronarographie", "تصوير الشرايين"],
@@ -1738,7 +1738,7 @@ function renderPatients(filter=""){
   el.innerHTML = list.map(p=>`
     <div class="slot" data-id="${p.id}">
       <div class="av">${escapeHtml(p.name.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase())}</div>
-      <div class="p"><strong>${escapeHtml(p.name)}</strong>${p.phone?`<div class="r">${escapeHtml(p.phone)}</div>`:""}${p.dob?`<div class="r">Born: ${fmtDob(p.dob)}</div>`:""}</div>
+      <div class="p"><strong>${escapeHtml(p.name)}</strong>${p.phone?`<div class="r">${escapeHtml(__ph(p.phone))}</div>`:""}${p.dob?`<div class="r">Born: ${fmtDob(p.dob)}</div>`:""}</div>
       <div class="r">${appts.filter(a=>a.patientId===p.id).length} visit(s)</div>
     </div>
   `).join("");
@@ -2012,6 +2012,8 @@ async function markSent(a){
   refreshAll();
   try{ await db.doc("appointments/"+a.id).update({reminderSentAt:t},true); }catch(e){}
 }
+const __ph0 = p => String(p||"").replace(/^\s*(\+|00)?961[\s-]*/,"");
+const __ph = p => { const v = __ph0(p); return v ? "\u2066"+v+"\u2069" : ""; };
 function normPhone(raw,cc){
   let d=String(raw||"").replace(/\D/g,"");
   if(!d) return "";
@@ -2044,7 +2046,7 @@ function renderMessages(){
     const p=patients.find(x=>x.id===a.patientId), phone=p&&p.phone;
     return '<div class="slot" data-id="'+a.id+'"><div class="t">'+a.time+'</div><div class="p"><b>'+escapeHtml(a.patientName)+'</b>'
       +'<div class="r">'+parseIso(a.date).toLocaleDateString(__LOC,{weekday:"short",month:"short",day:"numeric"})+' · '
-      +(phone?'<span style="white-space:nowrap">'+escapeHtml(String(phone).replace(/^\s*(\+|00)?961[\s-]*/,""))+'</span>':'<span class="bad">No phone number</span>')+'</div></div>'
+      +(phone?'<span style="white-space:nowrap">'+escapeHtml(__ph(phone))+'</span>':'<span class="bad">No phone number</span>')+'</div></div>'
       +(isSent(a)?'<span class="ok">✓ Sent</span>':'<button class="wa" data-wa="'+a.id+'">'+WA_ICON+'<span>Send</span></button>')+'</div>';
   }).join("");
   el.innerHTML='<div class="card" style="margin-bottom:14px"><h2 style="margin:0 0 4px;font-size:1.05rem;display:flex;align-items:center;gap:8px"><span class="wa-badge">'+WA_ICON+'</span><span>WhatsApp reminders</span></h2>'
@@ -2052,7 +2054,7 @@ function renderMessages(){
     +'<div class="field"><label>Clinic / doctor name (used in the message)</label><input id="msgClinic" value="'+escapeHtml(st.clinic)+'"></div>'
     +'<div class="field"><label>WhatsApp message (you can change it)</label><textarea id="msgTemplate" style="min-height:110px">'+escapeHtml(st.template)+'</textarea>'
     +'<div class="sub">You can use {name} {date} {time} {clinic}</div></div>'
-    +'<div class="field"><label>Default country code (added to numbers that have none)</label><input id="msgCC" value="'+escapeHtml(st.cc)+'"></div>'
+    +'<input id="msgCC" type="hidden" value="'+escapeHtml(st.cc)+'">'
     +'<button class="btn" id="msgSave">Save message</button></div>'
     +'<label>Upcoming appointments, next 7 days</label>'
     +'<div class="card" id="msgList" style="margin-top:6px">'+(rows||'<div class="empty">No upcoming appointments</div>')+'</div>';
@@ -2100,7 +2102,7 @@ function openApptModal(appt, preset){
         <div style="position:relative"><input id="fName" value="${isEdit?escapeHtml(appt.patientName):""}" autocomplete="off" placeholder="Type to search or add a patient"><div id="suggestBox"></div></div>
         <div id="matchBox"></div>
       </div>
-      <div class="field"><label>Phone (for WhatsApp reminders)</label><input id="fPhone" type="tel" placeholder="e.g. 71 123 456" value="${isEdit?escapeHtml((patients.find(x=>x.id===appt.patientId)||{}).phone||""):""}"></div>
+      <div class="field"><label>Phone (for WhatsApp reminders)</label><input id="fPhone" type="tel" placeholder="e.g. 71 123 456" value="${isEdit?escapeHtml(__ph0((patients.find(x=>x.id===appt.patientId)||{}).phone)):""}"></div>
       <div class="field"><label>Date</label><div class="dpick"><input id="fDate" type="date" tabindex="-1" value="${isEdit?appt.date:iso(selectedDate)}"></div></div>
       <div class="field" id="slotFieldWrap">
         <label>Time slot (30 min)</label>
@@ -2181,7 +2183,7 @@ function openApptModal(appt, preset){
     if(found){
       matchedPatientId = found.id;
       const ph = document.getElementById("fPhone"); if(ph && !ph.value.trim() && found.phone) ph.value = found.phone;
-      matchBox.innerHTML = `<div class="match">Existing patient: ${escapeHtml(found.name)}${found.phone?" · "+escapeHtml(found.phone):""}</div>`;
+      matchBox.innerHTML = `<div class="match">Existing patient: ${escapeHtml(found.name)}${found.phone?" · "+escapeHtml(__ph(found.phone)):""}</div>`;
     } else {
       matchBox.innerHTML = `<div class="match" style="opacity:.7">New patient — will be created on save</div>`;
     }
@@ -2196,7 +2198,7 @@ function openApptModal(appt, preset){
     const hits = patients.filter(p=>p.name.toLowerCase().includes(v) && p.name.trim().toLowerCase()!==v)
       .sort((a,b)=>a.name.toLowerCase().indexOf(v)-b.name.toLowerCase().indexOf(v)||a.name.localeCompare(b.name)).slice(0,5);
     suggestBox.innerHTML = hits.length ? '<div class="suggest">'+hits.map(p=>'<button type="button" data-pick="'+p.id+'">'+avatarHtml(p.name)
-      +'<span><b>'+escapeHtml(p.name)+'</b><small>'+escapeHtml(p.phone||"No phone")+(p.dob?' · '+ageOf(p.dob)+' y':'')+'</small></span></button>').join("")+'</div>' : "";
+      +'<span><b>'+escapeHtml(p.name)+'</b><small>'+escapeHtml(__ph(p.phone)||"No phone")+(p.dob?' · '+ageOf(p.dob)+' y':'')+'</small></span></button>').join("")+'</div>' : "";
   }
   nameInput.addEventListener("input",drawSuggest);
   nameInput.addEventListener("focus",drawSuggest);
@@ -2699,7 +2701,7 @@ function renderPatientDocs(body, p, files){
 function renderPatientInfo(body, p){
   const withAllergy = hasAllergyColumn();
   body.innerHTML = '<div class="card" style="padding:16px">'
-    +'<div class="field"><label for="pPhone">Phone</label><input id="pPhone" type="tel" value="'+escapeHtml(p.phone||"")+'"></div>'
+    +'<div class="field"><label for="pPhone">Phone</label><input id="pPhone" type="tel" value="'+escapeHtml(__ph0(p.phone))+'"></div>'
     +'<div class="field"><label for="pDob">Date of birth</label><input id="pDob" type="text" inputmode="numeric" autocomplete="off" maxlength="10" placeholder="DD/MM/YYYY" value="'+escapeHtml(fmtDob(p.dob))+'">'
     +'<div class="ex-hint">Type the numbers only, e.g. 12031952 → 12/03/1952. Only the year is fine too: 1952.</div></div>'
     +(withAllergy?'<div class="field"><label for="pAllergies">Allergies</label><input id="pAllergies" placeholder="e.g. Penicillin, latex" value="'+escapeHtml(p.allergies||"")+'"></div>':'')
@@ -3034,7 +3036,7 @@ function renderSide(){
     const hits = patients.filter(p=>p.name.toLowerCase().includes(v))
       .sort((a,b)=>a.name.toLowerCase().indexOf(v)-b.name.toLowerCase().indexOf(v)||a.name.localeCompare(b.name)).slice(0,6);
     box.innerHTML = '<div class="suggest">'+(hits.length ? hits.map(p=>'<button type="button" data-pp="'+p.id+'">'+avatarHtml(p.name)
-      +'<span><b>'+escapeHtml(p.name)+'</b><small>'+escapeHtml(p.phone||"No phone")+'</small></span></button>').join("")
+      +'<span><b>'+escapeHtml(p.name)+'</b><small>'+escapeHtml(__ph(p.phone)||"No phone")+'</small></span></button>').join("")
       : '<div class="empty" style="padding:12px">No patient found</div>')+'</div>';
   };
   inp.addEventListener("input", draw);
