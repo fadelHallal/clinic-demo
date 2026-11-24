@@ -3528,7 +3528,7 @@ function finAuto(key){
 function finAutoLines(key, income){
   income = Array.isArray(income) ? income : [];
   return finAuto(key).map(l=>{ const e = income.find(x=>x.auto===l.name), o = e && e.amount!=="" && e.amount!=null ? e : null;
-    return {...l, app:l.amount, amount: o ? finNum(o.amount) : l.amount, edited: !!o, paid: !!(e && e.paid)}; });
+    return {...l, app:l.amount, amount: o ? finNum(o.amount) : l.amount, edited: !!o, paid: !e || e.paid===undefined || !!e.paid}; });
 }
 const finOwn = income=>(Array.isArray(income) ? income : []).filter(l=>!l.auto);
 // The month before (the latest earlier month he filled in), whose left over starts this month.
@@ -3683,7 +3683,7 @@ function renderFinance(){
     else if(d.autoReset!==undefined){ fin.income = fin.income.flatMap(l=>l.auto!==d.autoReset ? [l] : l.paid ? [{...l, amount:""}] : []); }
     else if(d.paidAuto!==undefined || d.paidOwn!==undefined){   // ✓ = this line has been paid
       let l = d.paidOwn!==undefined ? fin.income[+d.paidOwn] : fin.income.find(x=>x.auto===d.paidAuto);
-      if(!l){ l = {auto:d.paidAuto, amount:""}; fin.income.push(l); }
+      if(!l){ l = {auto:d.paidAuto, amount:"", paid:true}; fin.income.push(l); }
       l.paid = !l.paid; b.classList.toggle("on", l.paid); b.setAttribute("aria-pressed", l.paid); b.closest(".fin-row").classList.toggle("is-paid", l.paid);
       finShowTotals(); finSave(); return;
     }
