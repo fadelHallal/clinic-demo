@@ -964,6 +964,33 @@ const I18N_DICT = {
   "Paid?": ["Payé ?", "مدفوع؟"],
   "Amount paid ($)": ["Montant payé ($)", "المبلغ المدفوع ($)"],
   "Other amount": ["Autre montant", "مبلغ آخر"],
+  "DD/MM/YYYY": ["JJ/MM/AAAA", "يوم/شهر/سنة"],
+  "e.g. Penicillin, latex": ["ex. pénicilline, latex", "مثلاً: بنسلين، لاتكس"],
+  "No patients": ["Aucun patient", "لا مرضى"],
+  "No appointments today": ["Aucun rendez-vous aujourd'hui", "لا مواعيد اليوم"],
+  "No appointments this day": ["Aucun rendez-vous ce jour", "لا مواعيد في هذا اليوم"],
+  "No phone number": ["Pas de numéro", "لا رقم هاتف"],
+  "No upcoming appointments": ["Aucun rendez-vous à venir", "لا مواعيد قادمة"],
+  "No free slots this day": ["Aucun créneau libre ce jour", "لا مواعيد شاغرة في هذا اليوم"],
+  "Allergy": ["Allergie", "حساسية"],
+  "No visits yet": ["Aucune visite", "لا زيارات بعد"],
+  "Download": ["Télécharger", "تنزيل"],
+  "Delete patient": ["Supprimer le patient", "حذف المريض"],
+  "Nothing in this period": ["Rien sur cette période", "لا شيء في هذه الفترة"],
+  "Free consultations": ["Consultations gratuites", "الاستشارات المجانية"],
+  "No free consultations": ["Aucune consultation gratuite", "لا استشارات مجانية"],
+  "No patient found": ["Aucun patient trouvé", "لم يُعثر على مريض"],
+  "Nothing in this month": ["Rien ce mois-ci", "لا شيء في هذا الشهر"],
+  "Are you sure you want to delete this appointment?": ["Voulez-vous vraiment supprimer ce rendez-vous ?", "هل تريد حقاً حذف هذا الموعد؟"],
+  "Delete this hospital act?": ["Supprimer cet acte hospitalier ?", "حذف هذا العمل في المستشفى؟"],
+  "Delete this clinic day?": ["Supprimer cette journée de clinique ?", "حذف يوم العيادة هذا؟"],
+  "Could not save to the database": ["Enregistrement impossible", "تعذّر الحفظ"],
+  "Could not delete the file": ["Suppression du fichier impossible", "تعذّر حذف الملف"],
+  "Could not open the file": ["Ouverture du fichier impossible", "تعذّر فتح الملف"],
+  "Could not delete everything": ["Suppression incomplète", "تعذّر حذف كل شيء"],
+  "Backup failed": ["Échec de la sauvegarde", "فشل النسخ الاحتياطي"],
+  "Other amount ($)": ["Autre montant ($)", "مبلغ آخر ($)"],
+  "Save as paid": ["Marquer payé", "تسجيل كمدفوع"],
   "Save": ["Enregistrer", "حفظ"],
   "Delete": ["Supprimer", "حذف"],
   "Cancel": ["Annuler", "إلغاء"],
@@ -1241,8 +1268,9 @@ const I18N_PATTERNS = [
     }
     if(node.nodeType !== 1) return;
     const tag = node.nodeName;
-    if(tag === "SCRIPT" || tag === "STYLE" || tag === "TEXTAREA") return;
+    if(tag === "SCRIPT" || tag === "STYLE") return;
     for(const a of ATTRS){ const v = node.getAttribute(a); if(v){ const n = tr(v); if(n !== v) node.setAttribute(a, n); } }
+    if(tag === "TEXTAREA") return;   // its text is what the user typed: keep it
     if(tag === "INPUT" && (node.type === "button" || node.type === "submit") && node.value){ const n = tr(node.value); if(n !== node.value) node.value = n; }
     for(const c of node.childNodes) walk(c);
   }
