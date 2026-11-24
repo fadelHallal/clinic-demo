@@ -547,6 +547,11 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-off
 :root[data-theme="dark"]{--free:#b69cff}
 .freeb{color:var(--free);font-weight:600}
 .stat .si.free{background:color-mix(in srgb,var(--free) 14%,var(--card));color:var(--free)}
+/* ===== WhatsApp buttons (demo) ===== */
+.wa,.btn.wabtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:700}
+.wa{padding:7px 12px;font-size:.8rem;border-radius:999px;box-shadow:0 2px 8px rgba(37,211,102,.35);white-space:nowrap}
+.wa:hover,.btn.wabtn:hover{background:#1ebe5b}
+.wa svg,.btn.wabtn svg{width:16px;height:16px;flex:none}
 /* ===== right-to-left (Arabic) ===== */
 [dir=rtl] .close{right:auto;left:14px}
 [dir=rtl] .side-search kbd{right:auto;left:8px}
@@ -1099,6 +1104,9 @@ const I18N_DICT = {
 
   // messages
   "Message": ["Message", "الرسالة"],
+  "Remind": ["Rappel", "تذكير"],
+  "Send": ["Envoyer", "إرسال"],
+  "✓ Sent": ["✓ Envoyé", "✓ أُرسل"],
   "💬 WhatsApp reminders": ["💬 Rappels WhatsApp", "💬 تذكيرات واتساب"],
   "💬 Send": ["💬 Envoyer", "💬 إرسال"],
   "Save message": ["Enregistrer le message", "حفظ الرسالة"],
@@ -1778,7 +1786,7 @@ function apptRow(a,nextId){
   const tag=st==="now"?'<span class="tag">NOW</span>':(a.id===nextId?'<span class="tag">NEXT</span>':'');
   const canPay=!a.paid && st!=="up";      // after (or during) the visit and not paid yet
   const wa=canPay?'<button class="qpay" data-pay="'+a.id+'" title="Record the payment">$ Paid?</button>'
-    :st!=="past"?(isSent(a)?'<span class="ok" style="align-self:center;font-size:.75rem">✓ Sent</span>':'<button class="wa" data-wa="'+a.id+'" title="Send WhatsApp reminder">💬</button>'):'';
+    :st!=="past"?(isSent(a)?'<span class="ok" style="align-self:center;font-size:.75rem">✓ Sent</span>':'<button class="wa" data-wa="'+a.id+'" title="Send WhatsApp reminder">'+WA_ICON+'<span>Remind</span></button>'):'';
   return '<div class="titem '+st+'" data-id="'+a.id+'"><div class="tt">'+a.time+'<small>'+endTime(a)+'</small></div>'
     +'<div class="tn"><b>'+escapeHtml(a.patientName)+'</b>'+tag
     +(a.reason?'<small>'+escapeHtml(a.reason)+'</small>':'')+(paid?'<small>'+paid+'</small>':'')+'</div>'+wa+'</div>';
@@ -1955,10 +1963,16 @@ function wireEvents(){
 }
 
 // ----- WhatsApp reminders (opens WhatsApp with the message ready; the doctor taps Send) -----
-const DEFAULT_TEMPLATE="Hello {name}, this is a reminder from {clinic}: you have an appointment on {date} at {time}. Please reply to confirm. Thank you!";
+const MSG_DEFAULTS = {
+  fr:{t:"{clinic} – Rappel : bonjour {name}, vous avez un rendez-vous le {date} à {time}. Merci de répondre pour confirmer.", c:"Cabinet du Dr Nadim"},
+  ar:{t:"مرحبًا {name}، نذكّرك من {clinic} بأن لديك موعدًا يوم {date} الساعة {time}. الرجاء الرد للتأكيد. شكرًا!", c:"عيادة الدكتور نديم"},
+  en:{t:"Hello {name}, this is a reminder from {clinic}: you have an appointment on {date} at {time}. Please reply to confirm. Thank you!", c:"Dr. Nadim's clinic"}};
+const MSG_D = MSG_DEFAULTS[window.__LANG] || MSG_DEFAULTS.en;
+const DEFAULT_TEMPLATE = MSG_D.t;
+const WA_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3.5 20.5l1.4-4.2A8.3 8.3 0 1 1 8 19.3z"/><path d="M9.2 8.4c.1 3.3 2.9 6.2 6.3 6.4l1-1.5-2.1-1-1 .8a4.6 4.6 0 0 1-2.4-2.4l.8-1-1-2.1z" fill="currentColor" stroke="none"/></svg>';
 function getMsgSettings(){
-  let s={}; try{ s=JSON.parse(localStorage.getItem("clinic_msg")||"{}"); }catch(e){}
-  return {clinic:s.clinic||"the clinic", cc:s.cc||"961", template:s.template||DEFAULT_TEMPLATE};
+  let s={}; try{ s=JSON.parse(localStorage.getItem("clinic_msg_"+window.__LANG)||"{}"); }catch(e){}
+  return {clinic:s.clinic||MSG_D.c, cc:s.cc||"961", template:s.template||DEFAULT_TEMPLATE};
 }
 function sentMap(){ try{ return JSON.parse(localStorage.getItem("clinic_sent")||"{}"); }catch(e){ return {}; } }
 function isSent(a){ return !!(a.reminderSentAt || sentMap()[a.id]); }
@@ -2003,7 +2017,7 @@ function renderMessages(){
     return '<div class="slot" data-id="'+a.id+'"><div class="t">'+a.time+'</div><div class="p"><b>'+escapeHtml(a.patientName)+'</b>'
       +'<div class="r">'+parseIso(a.date).toLocaleDateString(__LOC,{weekday:"short",month:"short",day:"numeric"})+' · '
       +(phone?escapeHtml(phone):'<span class="bad">No phone number</span>')+'</div></div>'
-      +(isSent(a)?'<span class="ok">✓ Sent</span>':'<button class="wa" data-wa="'+a.id+'">💬 Send</button>')+'</div>';
+      +(isSent(a)?'<span class="ok">✓ Sent</span>':'<button class="wa" data-wa="'+a.id+'">'+WA_ICON+'<span>Send</span></button>')+'</div>';
   }).join("");
   el.innerHTML='<div class="card" style="margin-bottom:14px"><h2 style="margin:0 0 4px;font-size:1.05rem">💬 WhatsApp reminders</h2>'
     +'<div class="sub" style="margin-bottom:12px">Tap Send: WhatsApp opens with the patient and the message ready, you just press send.</div>'
@@ -2019,7 +2033,7 @@ function renderMessages(){
     const v={clinic:document.getElementById("msgClinic").value.trim(),
       template:document.getElementById("msgTemplate").value.trim(),
       cc:document.getElementById("msgCC").value.replace(/\D/g,"")};
-    try{ localStorage.setItem("clinic_msg",JSON.stringify(v)); }catch(err){}
+    try{ localStorage.setItem("clinic_msg_"+window.__LANG,JSON.stringify(v)); }catch(err){}
     const b=e.target; b.textContent="Saved ✓"; setTimeout(()=>{ b.textContent="Save message"; },1500);
   };
 }
@@ -2113,7 +2127,7 @@ function openApptModal(appt, preset){
       <div id="conflictBox"></div>
       <div class="row">
         <button class="btn" id="saveAppt">Save</button>
-        ${isEdit?('<button class="btn wabtn" id="waBtn"'+(isSent(appt)?' disabled':'')+'>'+(isSent(appt)?'✓ Sent':'💬 WhatsApp')+'</button><button class="btn danger" id="delAppt">Delete</button>'):""}
+        ${isEdit?('<button class="btn wabtn" id="waBtn"'+(isSent(appt)?' disabled':'')+'>'+(isSent(appt)?'✓ Sent':WA_ICON+'<span>WhatsApp</span>')+'</button><button class="btn danger" id="delAppt">Delete</button>'):""}
       </div>
     </div>
   </div>`;
