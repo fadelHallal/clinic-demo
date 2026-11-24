@@ -548,6 +548,8 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-off
 :root[data-theme="dark"]{--free:#b69cff}
 .freeb{color:var(--free);font-weight:600}
 .stat .si.free{background:color-mix(in srgb,var(--free) 14%,var(--card));color:var(--free)}
+#msgList .slot{gap:12px}
+#msgList .slot .p{min-width:0}
 /* ===== WhatsApp header button (demo) ===== */
 .btn.wa-top{background:#25d366;border-color:#25d366;color:#fff;gap:5px;padding:6px 11px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.18)}
 .btn.wa-top:hover{background:#1ebe5b}
@@ -2042,7 +2044,7 @@ function renderMessages(){
     const p=patients.find(x=>x.id===a.patientId), phone=p&&p.phone;
     return '<div class="slot" data-id="'+a.id+'"><div class="t">'+a.time+'</div><div class="p"><b>'+escapeHtml(a.patientName)+'</b>'
       +'<div class="r">'+parseIso(a.date).toLocaleDateString(__LOC,{weekday:"short",month:"short",day:"numeric"})+' · '
-      +(phone?escapeHtml(phone):'<span class="bad">No phone number</span>')+'</div></div>'
+      +(phone?'<span style="white-space:nowrap">'+escapeHtml(String(phone).replace(/^\s*(\+|00)?961[\s-]*/,""))+'</span>':'<span class="bad">No phone number</span>')+'</div></div>'
       +(isSent(a)?'<span class="ok">✓ Sent</span>':'<button class="wa" data-wa="'+a.id+'">'+WA_ICON+'<span>Send</span></button>')+'</div>';
   }).join("");
   el.innerHTML='<div class="card" style="margin-bottom:14px"><h2 style="margin:0 0 4px;font-size:1.05rem;display:flex;align-items:center;gap:8px"><span class="wa-badge">'+WA_ICON+'</span><span>WhatsApp reminders</span></h2>'
